@@ -1,2 +1,3 @@
-/configs/__pycache__
-/docs*
+/configs/__pycache__/*
+/docs/*
+/raw/*
