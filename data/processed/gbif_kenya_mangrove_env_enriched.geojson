@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "gbif_kenya_mangrove_env_enriched",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "class": "Asteroidea", "decimalLatitude": -4.644905, "decimalLongitude": 39.405113, "elevation_m": 0, "eventDate": "2025-01-26 07:09:56", "family": "Ophidiasteridae", "gbifID": 5063468935, "genus": "Linckia", "is_mangrove": 1, "kingdom": "Animalia", "order": "Valvatida", "phylum": "Echinodermata", "scientificName": "Linckia multifora (Lamarck, 1816)", "species": "Linckia multifora" }, "geometry": { "type": "Point", "coordinates": [ 39.405113, -4.644905 ] } }
+]
+}
