@@ -1,0 +1,21 @@
+region,latitude,longitude,mangrove_area,biomass_density,soil_carbon,year,species,family
+Kenya_Coast_001,-4.0435,39.6682,2.5,150.0,45.0,2025,Rhizophora mucronata,Rhizophoraceae
+Kenya_Coast_002,-4.1234,39.7890,1.8,120.0,38.0,2025,Avicennia marina,Avicenniaceae
+Kenya_Coast_003,-3.9876,39.5432,3.2,180.0,52.0,2025,Ceriops tagal,Rhizophoraceae
+Kenya_Coast_004,-4.2345,39.8765,0.9,95.0,28.0,2025,Rhizophora mucronata,Rhizophoraceae
+Kenya_Coast_005,-3.8765,39.4321,4.1,200.0,65.0,2025,Avicennia marina,Avicenniaceae
+Kenya_Coast_006,-4.3456,39.9876,1.5,110.0,35.0,2025,Ceriops tagal,Rhizophoraceae
+Kenya_Coast_007,-3.7654,39.3210,2.8,165.0,48.0,2025,Rhizophora mucronata,Rhizophoraceae
+Kenya_Coast_008,-4.4567,40.0987,0.7,85.0,22.0,2025,Avicennia marina,Avicenniaceae
+Kenya_Coast_009,-3.6543,39.2109,5.2,220.0,78.0,2025,Ceriops tagal,Rhizophoraceae
+Kenya_Coast_010,-4.5678,40.1098,1.2,105.0,32.0,2025,Rhizophora mucronata,Rhizophoraceae
+Kenya_Coast_011,-3.5432,39.1098,3.8,190.0,58.0,2025,Avicennia marina,Avicenniaceae
+Kenya_Coast_012,-4.6789,40.2109,0.6,75.0,18.0,2025,Ceriops tagal,Rhizophoraceae
+Kenya_Coast_013,-3.4321,39.0987,4.5,210.0,72.0,2025,Rhizophora mucronata,Rhizophoraceae
+Kenya_Coast_014,-4.7890,40.3210,1.1,100.0,30.0,2025,Avicennia marina,Avicenniaceae
+Kenya_Coast_015,-3.3210,38.9876,6.1,240.0,85.0,2025,Ceriops tagal,Rhizophoraceae
+Kenya_Coast_016,-2.9876,39.8765,2.3,145.0,42.0,2025,Rhizophora mucronata,Rhizophoraceae
+Kenya_Coast_017,-3.1234,39.7654,1.9,125.0,36.0,2025,Avicennia marina,Avicenniaceae
+Kenya_Coast_018,-2.8765,39.6543,3.5,175.0,55.0,2025,Ceriops tagal,Rhizophoraceae
+Kenya_Coast_019,-3.2345,39.5432,0.8,90.0,25.0,2025,Rhizophora mucronata,Rhizophoraceae
+Kenya_Coast_020,-2.7654,39.4321,4.8,205.0,68.0,2025,Avicennia marina,Avicenniaceae
