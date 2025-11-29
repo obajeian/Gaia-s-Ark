@@ -109,37 +109,47 @@ class CarbonModel:
     
     def load_model(self):
         """Load trained model"""
-        if self.model_path.exists():
-            self.model = joblib.load(self.model_path)
-            logger.info("Model loaded successfully")
-        else:
-            logger.warning("No trained model found. Training new model...")
+        try:
+            if self.model_path.exists():
+                self.model = joblib.load(self.model_path)
+                logger.info("Model loaded successfully")
+            else:
+                logger.warning("No trained model found. Training new model...")
+                self.train_model()
+        except Exception as e:
+            logger.error(f"Error loading model: {e}. Retraining...")
             self.train_model()
     
     def predict_carbon(self, mangrove_area, biomass_density, soil_carbon, latitude, longitude):
-        """Predict carbon stock for given parameters"""
-        if self.model is None:
-            self.load_model()
-        
-        # Prepare features
-        area_biomass_interaction = mangrove_area * biomass_density
-        coastal_distance = abs(longitude - 39.5)
-        
-        features = np.array([[
-            mangrove_area, biomass_density, soil_carbon, latitude, longitude,
-            area_biomass_interaction, coastal_distance
-        ]])
-        
-        prediction = self.model.predict(features)[0]
-        
-        # Calculate confidence (simplified)
-        confidence = min(0.95, max(0.6, 1.0 - (abs(prediction - 50) / 100)))
-        
-        return {
-            'predicted_carbon_stock': round(prediction, 2),
-            'confidence_score': round(confidence, 3),
-            'change_rate': round(np.random.uniform(-2, 5), 2)  # Simulated change rate
-        }
+        try:
+            if self.model is None:
+                self.load_model()
+            
+            # Prepare features
+            area_biomass_interaction = mangrove_area * biomass_density
+            coastal_distance = abs(longitude - 39.5)
+            
+            features = np.array([[
+                mangrove_area, biomass_density, soil_carbon, latitude, longitude,
+                area_biomass_interaction, coastal_distance
+            ]])
+            
+            prediction = self.model.predict(features)[0]
+            
+            # Calculate confidence (simplified)
+            # Basic heuristic: higher confidence for values closer to training mean (approx 50-150 range)
+            confidence = min(0.95, max(0.6, 1.0 - (abs(prediction - 100) / 200)))
+            
+            return {
+                'predicted_carbon_stock': round(prediction, 2),
+                'confidence_score': round(confidence, 3),
+                'change_rate': round(np.random.uniform(-2, 5), 2)  # Simulated change rate
+            }
+        except Exception as e:
+            logger.error(f"Error in predict_carbon: {e}")
+            # Return a safe fallback or re-raise depending on requirements. 
+            # For now, re-raising to let API handle it, but logging first.
+            raise e
     
     def get_feature_importance(self):
         """Get feature importance from trained model"""

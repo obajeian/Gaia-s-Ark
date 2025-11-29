@@ -76,39 +76,56 @@ class DataPreprocessor:
             return self._generate_sample_data()
     
     def _generate_sample_data(self):
-        """Generate sample mangrove data for testing"""
+        """Generate sample mangrove data with history (2000-2025)"""
         np.random.seed(42)
-        n_samples = 100
+        n_locations = 50  # Number of distinct mangrove patches
+        years = [2000, 2005, 2010, 2015, 2020, 2025]
         
         # Kenya coastal coordinates
         lat_range = (-4.7, -2.2)
         lon_range = (39.3, 41.0)
         
-        data = {
-            'region': [f"Kenya_Coast_{i}" for i in range(n_samples)],
-            'latitude': np.random.uniform(lat_range[0], lat_range[1], n_samples),
-            'longitude': np.random.uniform(lon_range[0], lon_range[1], n_samples),
-            'mangrove_area': np.random.uniform(0.1, 10.0, n_samples),
-            'biomass_density': np.random.uniform(50, 250, n_samples),
-            'soil_carbon': np.random.uniform(15, 100, n_samples),
-            'year': [2025] * n_samples,
-            'species': np.random.choice(['Rhizophora mucronata', 'Avicennia marina', 'Ceriops tagal'], n_samples),
-            'family': ['Rhizophoraceae'] * n_samples
-        }
-        
         records = []
-        for i in range(n_samples):
-            records.append({
-                'region': f"Kenya_Coast_{i}",
-                'latitude': np.random.uniform(lat_range[0], lat_range[1]),
-                'longitude': np.random.uniform(lon_range[0], lon_range[1]),
-                'mangrove_area': np.random.uniform(0.1, 10.0),
-                'biomass_density': np.random.uniform(50, 250),
-                'soil_carbon': np.random.uniform(15, 100),
-                'year': 2025,
-                'species': np.random.choice(['Rhizophora mucronata', 'Avicennia marina', 'Ceriops tagal']),
-                'family': 'Rhizophoraceae'
-            })
+        
+        for i in range(n_locations):
+            # Base characteristics for this location
+            base_lat = np.random.uniform(lat_range[0], lat_range[1])
+            base_lon = np.random.uniform(lon_range[0], lon_range[1])
+            species = np.random.choice(['Rhizophora mucronata', 'Avicennia marina', 'Ceriops tagal'])
+            region_id = f"Kenya_Coast_{i}"
+            
+            # Initial state in year 2000
+            current_area = np.random.uniform(0.5, 10.0)
+            current_biomass = np.random.uniform(50, 150)
+            current_soil_carbon = np.random.uniform(20, 80)
+            
+            for year in years:
+                # Simulate change from previous step
+                if year > 2000:
+                    # Growth trend
+                    current_biomass *= np.random.uniform(1.01, 1.05) # 1-5% growth
+                    current_soil_carbon *= np.random.uniform(1.005, 1.02)
+                    
+                    # Random events
+                    event_roll = np.random.random()
+                    if event_roll < 0.1: # 10% chance of degradation (storm/logging)
+                        current_area *= np.random.uniform(0.7, 0.9)
+                        current_biomass *= 0.8
+                    elif event_roll > 0.9: # 10% chance of restoration/expansion
+                        current_area *= np.random.uniform(1.1, 1.2)
+                
+                records.append({
+                    'region': region_id,
+                    'latitude': base_lat,
+                    'longitude': base_lon,
+                    'mangrove_area': round(current_area, 2),
+                    'biomass_density': round(current_biomass, 2),
+                    'soil_carbon': round(current_soil_carbon, 2),
+                    'year': year,
+                    'species': species,
+                    'family': 'Rhizophoraceae'
+                })
+                
         return records
     
     def validate_schema(self, records):
@@ -147,6 +164,9 @@ class DataPreprocessor:
             )
         ''')
         
+        # Clear existing data to avoid duplicates during simulation testing
+        conn.execute("DELETE FROM mangrove_data")
+        
         # Insert records
         for record in records:
             conn.execute('''
@@ -165,7 +185,10 @@ class DataPreprocessor:
     
     def process_data(self):
         """Main processing pipeline"""
-        records = self.load_mangrove_data()
+        # For simulation mode, we bypass file loading and generate synthetic history
+        # records = self.load_mangrove_data() 
+        records = self._generate_sample_data()
+        
         records = self.validate_schema(records)
         self.save_to_db(records)
         return records

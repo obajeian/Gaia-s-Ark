@@ -89,8 +89,8 @@ async def predict_carbon(request: PredictionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/mapdata")
-async def get_map_data():
-    """Get all mangrove data for map visualization"""
+async def get_map_data(year: Optional[int] = 2025):
+    """Get all mangrove data for map visualization, filtered by year"""
     try:
         # Use absolute path for database to avoid CWD issues
         import os
@@ -99,7 +99,12 @@ async def get_map_data():
         
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM mangrove_data")
+        
+        if year:
+            cursor.execute("SELECT * FROM mangrove_data WHERE year = ?", (year,))
+        else:
+            cursor.execute("SELECT * FROM mangrove_data")
+            
         rows = cursor.fetchall()
         columns = [description[0] for description in cursor.description]
         conn.close()
@@ -123,12 +128,13 @@ async def get_map_data():
                 "mangrove_area": record['mangrove_area'],
                 "biomass_density": record['biomass_density'],
                 "soil_carbon": record['soil_carbon'],
+                "year": record['year'],
                 "species": record.get('species', 'Unknown'),
                 "predicted_carbon": prediction['predicted_carbon_stock'],
                 "confidence": prediction['confidence_score']
             })
         
-        return {"data": results, "count": len(results)}
+        return {"data": results, "count": len(results), "year": year}
     
     except Exception as e:
         logger.error(f"Map data error: {e}")
@@ -136,7 +142,7 @@ async def get_map_data():
 
 @app.get("/insight/{region}")
 async def get_region_insight(region: str):
-    """Get detailed insights for a specific region"""
+    """Get detailed insights for a specific region, including history"""
     try:
         # Use absolute path for database
         import os
@@ -145,33 +151,59 @@ async def get_region_insight(region: str):
         
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM mangrove_data WHERE region = ?", (region,))
-        row_data = cursor.fetchone()
+        # Fetch all years for this region, sorted by year
+        cursor.execute("SELECT * FROM mangrove_data WHERE region = ? ORDER BY year ASC", (region,))
+        rows = cursor.fetchall()
         columns = [description[0] for description in cursor.description]
         conn.close()
         
-        if not row_data:
+        if not rows:
             raise HTTPException(status_code=404, detail="Region not found")
         
-        row = dict(zip(columns, row_data))
-        prediction = carbon_model.predict_carbon(
-            row['mangrove_area'],
-            row['biomass_density'],
-            row['soil_carbon'],
-            row['latitude'],
-            row['longitude']
-        )
+        history = []
+        latest_record = None
+        
+        for row_data in rows:
+            row = dict(zip(columns, row_data))
+            prediction = carbon_model.predict_carbon(
+                row['mangrove_area'],
+                row['biomass_density'],
+                row['soil_carbon'],
+                row['latitude'],
+                row['longitude']
+            )
+            
+            record_entry = {
+                "year": row['year'],
+                "mangrove_area": row['mangrove_area'],
+                "biomass_density": row['biomass_density'],
+                "soil_carbon": row['soil_carbon'],
+                "predicted_carbon": prediction['predicted_carbon_stock']
+            }
+            history.append(record_entry)
+            latest_record = row # Last one is latest due to sort
+            
+        # Analyze trend
+        trend = "stable"
+        if len(history) > 1:
+            first = history[0]['predicted_carbon']
+            last = history[-1]['predicted_carbon']
+            if last > first * 1.1:
+                trend = "increasing"
+            elif last < first * 0.9:
+                trend = "decreasing"
         
         return {
             "region": region,
-            "location": {"latitude": row['latitude'], "longitude": row['longitude']},
-            "mangrove_characteristics": {
-                "area_hectares": row['mangrove_area'],
-                "biomass_density": row['biomass_density'],
-                "soil_carbon": row['soil_carbon'],
-                "species": row.get('species', 'Unknown')
+            "location": {"latitude": latest_record['latitude'], "longitude": latest_record['longitude']},
+            "latest_stats": {
+                "year": latest_record['year'],
+                "area_hectares": latest_record['mangrove_area'],
+                "biomass_density": latest_record['biomass_density'],
+                "species": latest_record.get('species', 'Unknown')
             },
-            "carbon_analysis": prediction,
+            "carbon_trend": trend,
+            "history": history,
             "recommendations": [
                 "Monitor biomass density changes",
                 "Protect soil carbon stores",
@@ -185,7 +217,7 @@ async def get_region_insight(region: str):
 
 @app.get("/stats")
 async def get_statistics():
-    """Get platform statistics"""
+    """Get platform statistics (based on latest year 2025)"""
     try:
         # Use absolute path for database
         import os
@@ -194,7 +226,8 @@ async def get_statistics():
         
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM mangrove_data")
+        # Only get latest year stats
+        cursor.execute("SELECT * FROM mangrove_data WHERE year = 2025")
         rows = cursor.fetchall()
         columns = [description[0] for description in cursor.description]
         conn.close()
@@ -225,7 +258,8 @@ async def get_statistics():
             "total_area_hectares": round(total_area, 2),
             "total_carbon_stock_tonnes": round(total_carbon, 2),
             "average_biomass_density": round(total_biomass / len(rows) if rows else 0, 2),
-            "species_count": len(species_set)
+            "species_count": len(species_set),
+            "data_year": 2025
         }
     
     except Exception as e:
